@@ -1,5 +1,9 @@
 
 # coding: utf-8
+
+# In[217]:
+
+
 #purpose finish foward and backward search algorithm and create a high efficient search algorithm
 import pandas as pd
 import numpy as np
@@ -9,25 +13,56 @@ from sklearn import preprocessing
 import sys
 print ("this is my AI assginmant")
 
-dftrain = pd.read_csv("CS205_SMALLtestdata__23.txt",delim_whitespace=True,header=None) #read the file and delimeter is whitespace
-# header is none is different with header is None
-#dftrain.columns
-#rint (dftrain.info)
-total_features = dftrain.shape[1]#0 for row 1 for columns 
-#print preprocessing.scale(dftrain[1])
-labels = dftrain[dftrain.columns[0]]# keep the first column as labels
-items = [6,9,3]#the index column we want to input inside the data
-print (len(items))
 
-def leave_one_out_cross_validation(k,test_data):
-    clf = neighbors.KNeighborsClassifier(n_neighbors=5, weights='uniform', algorithm='auto', leaf_size=30, p=2, metric='minkowski', metric_params=None,n_jobs=1)
+# In[310]:
+
+
+def scale_normalized(data):
+    max_num = max(data)
+    min_num = min(data)
+    for i,item in enumerate(data):
+        data[i] = (data[i]-min_num)/max_num
+    return data
+
+
+# In[311]:
+
+
+#dftrain = pd.read_csv("CS205_BIGtestdata__8.txt",delim_whitespace=True,header=None)
+dftrain = pd.read_csv("CS205_SMALLtestdata__68.txt",delim_whitespace=True,header=None)
+#dftrain = pd.read_csv("CS205_SMALLtestdata__23.txt",delim_whitespace=True,header=None) #read the file and delimeter is whitespace
+# header is none is different with header is None
+total_features = dftrain.shape[1]#0 for row 1 for columns 
+rows = dftrain.shape[0]
+print (dftrain.shape)
+labels = dftrain[dftrain.columns[0]]# keep the first column as labels
+print ("--start normalizing, and it will take some time")
+for i in range(1,total_features):
+    dftrain[dftrain.columns[i]]=scale_normalized(dftrain[dftrain.columns[i]])
+print ("FINISH NORMALIZE")
+
+
+# In[364]:
+
+
+def leave_one_out_cross_validation(row,k,test_data):
+    X = np.reshape(test_data, (row, k))
+    for row in range(0,row):
+        print X[row,0:]
+        for other_row in range(0,row):
+            if other_row == row:
+                continue
+            
+'''
+def leave_one_out_cross_validation(row,k,test_data):
+    clf = neighbors.KNeighborsClassifier(n_neighbors=3, weights='uniform', algorithm='auto', leaf_size=30, p=2, metric='minkowski', metric_params=None,n_jobs=1)
     #neighbors.KNeighborsClassifier
     # X is testing data
     # Y is label
     #test_data = dftrain[dftrain.columns[1]]# keep the first column as labels
     X = test_data
 
-    X = np.reshape(test_data, (100, k))
+    X = np.reshape(test_data, (row, k))
     #print (data)
     #data = np.reshape（test_data,(100,10))
     Y = labels
@@ -35,11 +70,17 @@ def leave_one_out_cross_validation(k,test_data):
     clf.fit(X,Y)
     clf.kneighbors(X=None, n_neighbors=None, return_distance= True)
     #clf.predict(X)
-    clf.predict(X)
+    clf.predict_proba(X)
     scores = clf.score(X,Y,sample_weight=None)
     temp = scores
     #print  (scores)
     return (float(scores))
+'''
+
+
+# In[365]:
+
+
 def call_test_data(temp_items):
     data = []
     sys.stdout.write("using features: ")
@@ -57,7 +98,7 @@ def call_test_data(temp_items):
     
 
 
-# In[179]:
+# In[366]:
 
 
 def forward_search(row,column):
@@ -76,11 +117,11 @@ def forward_search(row,column):
                     temp_items.append(element)
                 temp_items.append(i)
                 test_data = call_test_data(temp_items)# based on the element number to get new test_data columns 
-                cur_score = leave_one_out_cross_validation(num,test_data)
+                cur_score = leave_one_out_cross_validation(row,num,test_data)# num is num of columns
                 sys.stdout.write(" accuracy is ")
                 sys.stdout.flush()
                 print cur_score
-                if cur_score > max_score:
+                if cur_score >= max_score:
                     new_element = i
                     max_score = cur_score
         print (max_score,new_element)
@@ -95,6 +136,12 @@ def forward_search(row,column):
             index = i+1 
     print ("max score = " ,max_num)
     print ("feature = " ,items[0:index])
+    
+
+
+# In[367]:
+
+
 def Backward_Elimination(row,column):
     print ("--start Backward_Elimination")
     items=[]
@@ -116,11 +163,11 @@ def Backward_Elimination(row,column):
                     temp_items.append(element)
                 temp_items.remove(i)
                 test_data = call_test_data(temp_items)# based on the element number to get new test_data columns 
-                cur_score = leave_one_out_cross_validation(total_features-num-1,test_data)
+                cur_score = leave_one_out_cross_validation(row,total_features-num-1,test_data)
                 sys.stdout.write(" accuracy is ")
                 sys.stdout.flush()
                 print cur_score
-                if cur_score > max_score:
+                if cur_score >= max_score:
                     new_element = i
                     max_score = cur_score
         print (max_score,new_element)
@@ -141,11 +188,21 @@ def Backward_Elimination(row,column):
     for item in remove_list[0:index]:
         items.remove(item)
     print ("feature = " ,items)
-def main():
-    print 'this is main function'  
-   # forward_search(100,11)
-    Backward_Elimination(100,11)
-    #leave_one_out_cross_validation(3)
+    
+
+
+# In[368]:
+
+
+def main(): 
+    print 'this is main function'
+    #forward_search(rows,total_features)
+    #Backward_Elimination(rows,total_features)
+    items = [1,2,3]
+    test_data  = call_test_data(items)
+    leave_one_out_cross_validation(100,3,test_data)
+    #test_data()
+
 if __name__ == "__main__":
     main()
 
